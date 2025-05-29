@@ -43,7 +43,7 @@ namespace Group3r.View
             {
                 Timestamp = message.MsgDateTime,
                 Type = message.GetType().Name,
-                Message = message.MessageString
+                Message = message.GetMessage()
             };
 
             if (message is GpoResultMessage gpoResultMessage)
@@ -58,7 +58,7 @@ namespace Group3r.View
                 {
                     Timestamp = message.MsgDateTime,
                     Type = "FileResult",
-                    Message = message.MessageString,
+                    Message = message.GetMessage(),
                     FileResult = fileResultMessage.Result
                 };
                 Console.WriteLine(JsonConvert.SerializeObject(fileResult, jSettings));
@@ -71,7 +71,7 @@ namespace Group3r.View
                     var errorOutput = new
                     {
                         Error = "Fatal error occurred",
-                        Message = message.MessageString,
+                        Message = message.GetMessage(),
                         Timestamp = message.MsgDateTime
                     };
                     Console.WriteLine(JsonConvert.SerializeObject(errorOutput, jSettings));
@@ -81,7 +81,7 @@ namespace Group3r.View
                     var finishOutput = new
                     {
                         Status = "Completed",
-                        Message = message.MessageString,
+                        Message = message.GetMessage(),
                         Timestamp = message.MsgDateTime
                     };
                     Console.WriteLine(JsonConvert.SerializeObject(finishOutput, jSettings));
