@@ -26,10 +26,25 @@ namespace Group3r
 
         public void Run(string[] args)
         {
-            lock (ConsoleWriterLock)
+            // Check if JSON output is requested before printing banner
+            bool isJsonOutput = false;
+            for (int i = 0; i < args.Length; i++)
             {
-                Banner.PrintBanner();
+                if ((args[i] == "-p" || args[i] == "--printer") && i + 1 < args.Length)
+                {
+                    isJsonOutput = args[i + 1].ToLower() == "json";
+                    break;
+                }
             }
+
+            if (!isJsonOutput)
+            {
+                lock (ConsoleWriterLock)
+                {
+                    Banner.PrintBanner();
+                }
+            }
+            
             GrouperMq mq = new GrouperMq();
 
             try
