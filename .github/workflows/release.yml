@@ -1,0 +1,81 @@
+name: Release Group3r
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.5
+      
+    - name: Restore NuGet packages
+      run: nuget restore Group3r.sln
+      
+    - name: Build solution
+      run: msbuild Group3r.sln /p:Configuration=Release /p:Platform="Any CPU"
+      
+    - name: Create release package
+      run: |
+        mkdir release-package
+        copy Group3r\bin\Release\*.exe release-package\
+        copy Group3r\bin\Release\*.dll release-package\
+        copy Group3r\bin\Release\*.config release-package\
+        copy JSON_OUTPUT_README.md release-package\
+        copy example_json_output.json release-package\
+        copy README.md release-package\
+        
+    - name: Archive release package
+      run: |
+        cd release-package
+        tar -czf ../Group3r-${{ github.ref_name }}.tar.gz *
+        cd ..
+        
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Group3r ${{ github.ref_name }}
+        body: |
+          ## Changes in ${{ github.ref_name }}
+          
+          ### JSON Output Support Added
+          - Added support for JSON output format using `-p json` option
+          - Enhanced integration capabilities with other security tools
+          - Complete preservation of GPO analysis data in structured format
+          
+          ### Usage
+          ```bash
+          # For JSON output
+          Group3r.exe -p json -s -y "C:\Path\To\SYSVOL"
+          
+          # For default nice output  
+          Group3r.exe -s -y "C:\Path\To\SYSVOL"
+          ```
+          
+          See JSON_OUTPUT_README.md for detailed documentation.
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./Group3r-${{ github.ref_name }}.tar.gz
+        asset_name: Group3r-${{ github.ref_name }}.tar.gz
+        asset_content_type: application/gzip 

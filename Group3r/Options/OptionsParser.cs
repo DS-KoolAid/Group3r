@@ -29,6 +29,7 @@ namespace Group3r.Options
             parser.Arguments.Add(new SwitchArgument('h', "help", "Displays this help.", false));
             parser.Arguments.Add(new SwitchArgument('o', "offline", "Disables checks that require LDAP comms with a DC or SMB comms with file shares found in policy settings. Requires that you define a value for -y.", false));
             parser.Arguments.Add(new ValueArgument<string>('f', "outfile", "Path for output file. You probably want this if you're not using -s."));
+            parser.Arguments.Add(new ValueArgument<string>('p', "printer", "Output format for results. Options are 'nice' (default) for human-readable output or 'json' for JSON output."));
             parser.Arguments.Add(new SwitchArgument('s', "stdout", "Enables outputting results to stdout as soon as they're found. You probably want this if you're not using -f.", false));
             parser.Arguments.Add(new ValueArgument<string>('y', "sysvol", "Set the path to a domain SYSVOL directory."));
             parser.Arguments.Add(new ValueArgument<int>('t', "threads", "Max number of threads. Defaults to 10."));
@@ -201,6 +202,9 @@ namespace Group3r.Options
             {
                 throw new ArgumentException("You have specified offline mode but not specified a path to SysVol. I can just make shit up I guess?");
             }
+
+            // Initialize the printer after all options are set
+            options.InitializePrinter();
 
             mq.Info("Parsed args successfully.");
             return options;

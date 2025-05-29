@@ -86,8 +86,16 @@ namespace Group3r
          */
         private void HandleForever(GrouperOptions options, GrouperMq mq)
         {
-            // TODO: Implement option for output type when required. 
-            IMessageProcessor processor = new CliMessageProcessor();
+            // Select the appropriate message processor based on output type
+            IMessageProcessor processor;
+            if (options.PrinterType?.ToLower() == "json")
+            {
+                processor = new JsonMessageProcessor();
+            }
+            else
+            {
+                processor = new CliMessageProcessor();
+            }
 
             bool exit = false;
             while (exit == false)

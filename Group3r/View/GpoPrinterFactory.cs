@@ -15,20 +15,19 @@ namespace Group3r.View
         public static IGpoPrinter GetPrinter(string setting, GrouperOptions options)
         {
             IGpoPrinter processor;
-            // Currently only JSON exists which is the default.
-            //switch (setting)
-            //{
-            //   case "json":
-            //       processor = new JsonGpoPrinter(options);
-            //       break;
-            //   case "nice":
-            //       processor = new NiceGpoPrinter(options);
-            //       break;
-            //   default:
-            //       processor = new NiceGpoPrinter(options);
-            //       break;
-            //}
-            processor = new NiceGpoPrinter(options);
+            
+            switch (setting?.ToLower())
+            {
+                case "json":
+                    processor = new JsonGpoPrinter(options);
+                    break;
+                case "nice":
+                    processor = new NiceGpoPrinter(options);
+                    break;
+                default:
+                    processor = new NiceGpoPrinter(options);
+                    break;
+            }
 
             return processor;
         }

@@ -1,0 +1,57 @@
+{
+  "Attributes": {
+    "DisplayName": "Default Domain Policy",
+    "Name": "{31B2F340-016D-11D2-945F-00C04FB984F9}",
+    "GpoPath": "\\\\domain.local\\sysvol\\domain.local\\Policies\\{31B2F340-016D-11D2-945F-00C04FB984F9}",
+    "GpoUid": "{31B2F340-016D-11D2-945F-00C04FB984F9}",
+    "VersionDirectory": 1,
+    "VersionSysvol": 1,
+    "IsDisabled": false,
+    "IsEnforced": true,
+    "ComputerExtensions": [
+      "{35378EAC-683F-11D2-A89A-00C04FBBCFA2}",
+      "{827D319E-6EAC-11D2-A4EA-00C04F79F83A}"
+    ],
+    "UserExtensions": [
+      "{35378EAC-683F-11D2-A89A-00C04FBBCFA2}"
+    ]
+  },
+  "GpoAclResult": [
+    {
+      "Trustee": "DOMAIN\\Domain Admins",
+      "AccessMask": "FullControl",
+      "AceType": "AccessAllowed"
+    }
+  ],
+  "GpoAttributeFindings": [
+    {
+      "FindingReason": "Found some interesting ACLs on this GPO. Might wanna check 'em out.",
+      "FindingDetail": "IDK just look at it jeez.",
+      "Triage": "Black"
+    }
+  ],
+  "SettingResults": [
+    {
+      "Setting": {
+        "SettingName": "MinimumPasswordLength",
+        "SettingValue": "7",
+        "Source": "Computer\\Security\\Account Policies\\Password Policy"
+      },
+      "Findings": [
+        {
+          "FindingReason": "Password length is below recommended minimum",
+          "FindingDetail": "Password length of 7 is below the recommended minimum of 14 characters",
+          "Triage": "Yellow"
+        }
+      ]
+    },
+    {
+      "Setting": {
+        "SettingName": "PasswordComplexity",
+        "SettingValue": "Enabled",
+        "Source": "Computer\\Security\\Account Policies\\Password Policy"
+      },
+      "Findings": []
+    }
+  ]
+} 
