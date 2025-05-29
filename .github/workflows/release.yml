@@ -42,13 +42,9 @@ jobs:
         cd ..
         
     - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Group3r ${{ github.ref_name }}
+        name: Group3r ${{ github.ref_name }}
         body: |
           ## Changes in ${{ github.ref_name }}
           
@@ -69,13 +65,4 @@ jobs:
           See JSON_OUTPUT_README.md for detailed documentation.
         draft: false
         prerelease: false
-        
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Group3r-${{ github.ref_name }}.tar.gz
-        asset_name: Group3r-${{ github.ref_name }}.tar.gz
-        asset_content_type: application/gzip 
+        files: Group3r-${{ github.ref_name }}.tar.gz 

@@ -33,7 +33,7 @@ jobs:
       run: msbuild Group3r.sln /p:Configuration=Release /p:Platform="Any CPU"
       
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Group3r-Release
         path: |
@@ -43,7 +43,7 @@ jobs:
         if-no-files-found: error
         
     - name: Upload JSON example
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: JSON-Examples
         path: |
