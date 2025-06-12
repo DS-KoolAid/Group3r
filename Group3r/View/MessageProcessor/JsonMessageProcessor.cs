@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Group3r.View
 {
@@ -13,7 +14,6 @@ namespace Group3r.View
     class JsonMessageProcessor : IMessageProcessor
     {
         private JsonSerializerSettings jSettings;
-        private List<object> outputObjects;
 
         /**
          * Summary: constructor
@@ -29,7 +29,6 @@ namespace Group3r.View
                 Formatting = Formatting.Indented,
                 Converters = new List<JsonConverter>() { new StringEnumConverter() }
             };
-            outputObjects = new List<object>();
         }
 
         /**
@@ -39,18 +38,11 @@ namespace Group3r.View
          */
         public bool ProcessMessage(QueueMessage message, GrouperOptions options)
         {
-            var messageObject = new
-            {
-                Timestamp = message.MsgDateTime,
-                Type = message.GetType().Name,
-                Message = message.GetMessage()
-            };
-
             if (message is GpoResultMessage gpoResultMessage)
             {
-                // For GPO results, output immediately as JSON
+                // For GPO results, use the dedicated printer for consistent output
                 string jsonOutput = options.Printer.OutputGpoResult(gpoResultMessage.GpoResult);
-                Console.WriteLine(jsonOutput);
+                WriteOutput(jsonOutput, options);
             }
             else if (message is FileResultMessage fileResultMessage)
             {
@@ -61,40 +53,61 @@ namespace Group3r.View
                     Message = message.GetMessage(),
                     FileResult = fileResultMessage.Result
                 };
-                Console.WriteLine(JsonConvert.SerializeObject(fileResult, jSettings));
+                WriteOutput(JsonConvert.SerializeObject(fileResult, jSettings), options);
             }
-            else if (message is FatalMessage || message is FinishMessage)
+            else if (message is InfoMessage || message is ErrorMessage)
             {
-                // For fatal or finish messages, output any remaining data
-                if (message is FatalMessage)
+                var messageObject = new
                 {
-                    var errorOutput = new
-                    {
-                        Error = "Fatal error occurred",
-                        Message = message.GetMessage(),
-                        Timestamp = message.MsgDateTime
-                    };
-                    Console.WriteLine(JsonConvert.SerializeObject(errorOutput, jSettings));
-                }
-                else
+                    Timestamp = message.MsgDateTime,
+                    Type = message.GetType().Name.Replace("Message", ""),
+                    Message = message.GetMessage()
+                };
+                WriteOutput(JsonConvert.SerializeObject(messageObject, jSettings), options);
+            }
+            else if (message is FatalMessage)
+            {
+                var errorOutput = new
                 {
-                    var finishOutput = new
-                    {
-                        Status = "Completed",
-                        Message = message.GetMessage(),
-                        Timestamp = message.MsgDateTime
-                    };
-                    Console.WriteLine(JsonConvert.SerializeObject(finishOutput, jSettings));
-                }
+                    Timestamp = message.MsgDateTime,
+                    Type = "Fatal",
+                    Message = message.GetMessage()
+                };
+                WriteOutput(JsonConvert.SerializeObject(errorOutput, jSettings), options);
                 return true;
             }
-            else if (!(message is TraceMessage || message is DebugMessage))
+            else if (message is FinishMessage)
             {
-                // For other non-debug messages, output them
-                Console.WriteLine(JsonConvert.SerializeObject(messageObject, jSettings));
+                var finishOutput = new
+                {
+                    Timestamp = message.MsgDateTime,
+                    Type = "Finish",
+                    Message = message.GetMessage()
+                };
+                WriteOutput(JsonConvert.SerializeObject(finishOutput, jSettings), options);
+                return true;
             }
+            // Skip TraceMessage and DebugMessage for cleaner JSON output
 
             return false;
+        }
+
+        /**
+         * Summary: Writes output to console or file based on options
+         * Arguments: output string to write, GrouperOptions for configuration
+         * Returns: None
+         */
+        private void WriteOutput(string output, GrouperOptions options)
+        {
+            if (options.LogToFile && !string.IsNullOrEmpty(options.LogFilePath))
+            {
+                File.AppendAllText(options.LogFilePath, output + Environment.NewLine);
+            }
+            
+            if (options.LogToConsole)
+            {
+                Console.WriteLine(output);
+            }
         }
     }
 } 
