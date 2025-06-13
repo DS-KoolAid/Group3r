@@ -14,6 +14,8 @@ namespace Group3r.View
     class JsonMessageProcessor : IMessageProcessor
     {
         private JsonSerializerSettings jSettings;
+        private List<object> messages;
+        private bool hasStarted;
 
         /**
          * Summary: constructor
@@ -29,6 +31,8 @@ namespace Group3r.View
                 Formatting = Formatting.Indented,
                 Converters = new List<JsonConverter>() { new StringEnumConverter() }
             };
+            messages = new List<object>();
+            hasStarted = false;
         }
 
         /**
@@ -38,56 +42,81 @@ namespace Group3r.View
          */
         public bool ProcessMessage(QueueMessage message, GrouperOptions options)
         {
+            // Initialize JSON array output on first message
+            if (!hasStarted)
+            {
+                WriteOutput("[", options);
+                hasStarted = true;
+            }
+
+            object messageObject = null;
+            bool isLastMessage = false;
+
             if (message is GpoResultMessage gpoResultMessage)
             {
-                // For GPO results, use the dedicated printer for consistent output
-                string jsonOutput = options.Printer.OutputGpoResult(gpoResultMessage.GpoResult);
-                WriteOutput(jsonOutput, options);
+                // Parse the GPO result JSON output and add it as an object
+                string gpoJson = options.Printer.OutputGpoResult(gpoResultMessage.GpoResult);
+                messageObject = JsonConvert.DeserializeObject(gpoJson);
             }
             else if (message is FileResultMessage fileResultMessage)
             {
-                var fileResult = new
+                messageObject = new
                 {
                     Timestamp = message.MsgDateTime,
                     Type = "FileResult",
                     Message = message.GetMessage(),
                     FileResult = fileResultMessage.Result
                 };
-                WriteOutput(JsonConvert.SerializeObject(fileResult, jSettings), options);
             }
             else if (message is InfoMessage || message is ErrorMessage)
             {
-                var messageObject = new
+                messageObject = new
                 {
                     Timestamp = message.MsgDateTime,
                     Type = message.GetType().Name.Replace("Message", ""),
                     Message = message.GetMessage()
                 };
-                WriteOutput(JsonConvert.SerializeObject(messageObject, jSettings), options);
             }
             else if (message is FatalMessage)
             {
-                var errorOutput = new
+                messageObject = new
                 {
                     Timestamp = message.MsgDateTime,
                     Type = "Fatal",
                     Message = message.GetMessage()
                 };
-                WriteOutput(JsonConvert.SerializeObject(errorOutput, jSettings), options);
-                return true;
+                isLastMessage = true;
             }
             else if (message is FinishMessage)
             {
-                var finishOutput = new
+                messageObject = new
                 {
                     Timestamp = message.MsgDateTime,
                     Type = "Finish",
                     Message = message.GetMessage()
                 };
-                WriteOutput(JsonConvert.SerializeObject(finishOutput, jSettings), options);
+                isLastMessage = true;
+            }
+
+            // Add message to array if we have one
+            if (messageObject != null)
+            {
+                // Add comma separator if not the first message
+                if (messages.Count > 0)
+                {
+                    WriteOutput(",", options);
+                }
+                
+                messages.Add(messageObject);
+                WriteOutput(JsonConvert.SerializeObject(messageObject, jSettings), options);
+            }
+
+            // Close JSON array on final message
+            if (isLastMessage)
+            {
+                WriteOutput("]", options);
                 return true;
             }
-            // Skip TraceMessage and DebugMessage for cleaner JSON output
 
             return false;
         }
