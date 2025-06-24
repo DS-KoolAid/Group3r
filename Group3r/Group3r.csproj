@@ -110,6 +110,7 @@
     <Compile Include="View\IGpoPrinter.cs" />
     <Compile Include="View\JsonGpoPrinter.cs" />
     <Compile Include="View\MessageProcessor\CliMessageProcessor.cs" />
+    <Compile Include="View\MessageProcessor\DirectFileJsonProcessor.cs" />
     <Compile Include="View\MessageProcessor\IMessageProcessor.cs" />
     <Compile Include="View\MessageProcessor\JsonMessageProcessor.cs" />
     <Compile Include="View\NiceGpoPrinter.cs" />

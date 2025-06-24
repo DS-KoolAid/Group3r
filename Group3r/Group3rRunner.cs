@@ -64,8 +64,7 @@ namespace Group3r
                 Console.WriteLine("Unhandled exception in Group3rRunner. Please report the following error directly to l0ss or file an issue in GitHub:");
                 Console.WriteLine(e.ToString());
                 DumpQueue(mq);
-                Console.ReadLine();
-
+                Environment.Exit(1);
             }
         }
 
@@ -105,7 +104,15 @@ namespace Group3r
             IMessageProcessor processor;
             if (options.PrinterType?.ToLower() == "json")
             {
-                processor = new JsonMessageProcessor();
+                // Use direct file processor if outputting JSON to a file
+                if (options.LogToFile && !string.IsNullOrEmpty(options.LogFilePath))
+                {
+                    processor = new DirectFileJsonProcessor(options.LogFilePath);
+                }
+                else
+                {
+                    processor = new JsonMessageProcessor();
+                }
             }
             else
             {
@@ -113,14 +120,24 @@ namespace Group3r
             }
 
             bool exit = false;
+            
             while (exit == false)
             {
-                // mq.Pop blocks.
-                QueueMessage msg = mq.Pop();
-                lock (ConsoleWriterLock)
+                // Use TryTake with a reasonable timeout instead of blocking forever
+                // This allows for better process control without implementing a full timeout
+                if (mq.Q.TryTake(out QueueMessage msg, 5000)) // 5 second wait
                 {
-                    exit = processor.ProcessMessage(msg, options);
+                    lock (ConsoleWriterLock)
+                    {
+                        exit = processor.ProcessMessage(msg, options);
+                    }
                 }
+            }
+            
+            // Ensure cleanup for DirectFileJsonProcessor
+            if (processor is DirectFileJsonProcessor finalProcessor)
+            {
+                finalProcessor.Finalize();
             }
         }
         /// <summary>
