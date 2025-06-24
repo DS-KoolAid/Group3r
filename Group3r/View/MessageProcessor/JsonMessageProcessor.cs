@@ -115,6 +115,21 @@ namespace Group3r.View
             if (isLastMessage)
             {
                 WriteOutput("]", options);
+                
+                // Force clean exit when running with file output to prevent hanging
+                if (options.LogToFile && !string.IsNullOrEmpty(options.LogFilePath))
+                {
+                    // Ensure all output is flushed
+                    if (options.LogToConsole)
+                    {
+                        Console.Out.Flush();
+                        Console.Error.Flush();
+                    }
+                    
+                    // Exit cleanly
+                    Environment.Exit(0);
+                }
+                
                 return true;
             }
 
